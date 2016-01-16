@@ -480,6 +480,7 @@
   ./system/boot/tmp.nix
   ./system/etc/etc.nix
   ./tasks/bcache.nix
+  ./tasks/enhanceio.nix
   ./tasks/cpu-freq.nix
   ./tasks/encrypted-devices.nix
   ./tasks/filesystems.nix
