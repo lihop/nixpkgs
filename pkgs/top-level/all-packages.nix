@@ -9837,6 +9837,8 @@ let
 
   ebtables = callPackage ../os-specific/linux/ebtables { };
 
+  eio_cli = callPackage ../os-specific/linux/enhanceio/cli.nix { };
+
   eject = utillinux;
 
   fanctl = callPackage ../os-specific/linux/fanctl {
@@ -10121,7 +10123,7 @@ let
 
     cpupower = callPackage ../os-specific/linux/cpupower { };
 
-    enhanceio = callPackage ../os-specific/linux/enhanceio { };
+    enhanceio = callPackage ../os-specific/linux/enhanceio/driver.nix { };
 
     e1000e = callPackage ../os-specific/linux/e1000e {};
 
