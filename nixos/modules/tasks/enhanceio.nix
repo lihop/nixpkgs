@@ -58,23 +58,33 @@ let
   udevRules = (cache: pkgs.stdenv.mkDerivation {
     name = "enhanceio-${cache.cacheName}-udev-rules";
 
-    src = pkgs.linuxPackages.enhanceio.src; 
+    src = pkgs.eio_cli.src; 
 
     patchPhase = ''
-      substitute \
-        Documents/94-Enhanceio.template 94-enhanceio-${cache.cacheName}.rules \
+      substitute CLI/eio_cli eio_cli.py \
         --replace "/sbin/eio_cli" "${pkgs.eio_cli}/bin/eio_cli" \
-        --replace "<cache_name>" "${cache.cacheName}" \
-        --replace "<source_match_expr>" "${cache.hdd}" \
-        --replace "<cache_match_expr>" "${cache.ssd}" \
-        --replace "<mode>" "${cache.mode}" \
-        --replace "<policy>" "${cache.policy}" \
-        --replace "<block_size>" "${toString cache.blockSize}"
+        --replace "/etc/udev/rules.d/" "./" \
+        --replace "udevadm" "${config.systemd.package}/bin/udevadm"
+    '';
+
+    buildInputs = [ pkgs.python ];
+
+    buildPhase = ''
+      python -c '\
+          from eio_cli import Cache_rec;\
+          cache = Cache_rec(\
+              name="${cache.cacheName}",\
+              src_name="${cache.hdd}",\
+              ssd_name="${cache.ssd}",\
+              policy="${cache.policy}",\
+              mode="${cache.mode}",\
+              blksize="${toString cache.blockSize}");\
+          cache.create_rules();'
     '';
 
     installPhase = ''
       mkdir -p $out/etc/udev/rules.d
-      cp 94-enhanceio-${cache.cacheName}.rules $out/etc/udev/rules.d
+      cp *.rules $out/etc/udev/rules.d
     '';
   });
 
@@ -121,6 +131,12 @@ in
 
     # Add udev rules for caches so that they persist.
     services.udev.packages = map udevRules enhanceioCaches;
+
+#    boot.initrd.extraUdevRulesCommands = ''
+#      for rules in ${concatStringsSep " " (map udevRules enhanceioCaches)}; do
+#        cp -v $rules/etc/udev/rules.d/*.rules $out/
+#      done
+#    '';
 
     # Emit systemd services to create caches 
     systemd.services =
