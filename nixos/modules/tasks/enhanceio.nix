@@ -121,22 +121,21 @@ in
 
     # Load all the modules for now. In the future we might check to
     # see what modules actually need to be loaded depending in the
-    # config.
-    boot.kernelModules =
+    # config. lru fifo rand
+    boot.initrd.kernelModules =
       [ "enhanceio"
-        "enhanceio_lru"
         "enhanceio_fifo"
-        "enhanceio_rand"
       ];
 
-    # Add udev rules for caches so that they persist.
-    services.udev.packages = map udevRules enhanceioCaches;
+#    # Add udev rules for caches so that they persist.
+#    services.udev.packages = map udevRules enhanceioCaches;
 
-#    boot.initrd.extraUdevRulesCommands = ''
-#      for rules in ${concatStringsSep " " (map udevRules enhanceioCaches)}; do
-#        cp -v $rules/etc/udev/rules.d/*.rules $out/
-#      done
-#    '';
+    boot.initrd.extraUdevRulesCommands = ''
+      for rules in ${concatStringsSep " " (map udevRules enhanceioCaches)}; do
+        echo $out
+        cp -v $rules/etc/udev/rules.d/*.rules $out/
+      done
+    '';
 
     # Emit systemd services to create caches 
     systemd.services =
