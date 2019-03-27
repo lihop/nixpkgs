@@ -1,21 +1,43 @@
-{ stdenv, requireFile, makeWrapper, which, zlib, libGL, glib, xorg, libxkbcommon
-, xdg_utils
+{ stdenv, requireFile, makeWrapper, which, zlib, libGL, glib, xdg_utils
+, openssl, libgcrypt, dbus, qtwebsockets, qtbase, qtquickcontrols2, qtdeclarative, full
 # For glewinfo
-, libXmu, libXi, libXext }:
+, libXmu, libXi, libglvnd, linuxPackages, libXext, xorg, hiredis, freetype, fontconfig, libxkbcommon, xkeyboard_config }:
 
 let
   packages = [
-    stdenv.cc.cc zlib glib xorg.libX11 libxkbcommon libXmu libXi libXext libGL
+    dbus.lib
+    freetype
+    fontconfig
+    full
+    glib
+    hiredis
+    libgcrypt
+    libxkbcommon
+    libGL
+    libglvnd
+    libXmu
+    libXi
+    libXext
+    linuxPackages.nvidia_x11
+    openssl
+    #qtbase
+    #qtdeclarative
+    #qtquickcontrols2
+    #qtwebsockets
+    stdenv.cc.cc
+    xorg.libxcb
+    xorg.libX11
+    zlib
   ];
   libPath = "${stdenv.lib.makeLibraryPath packages}";
 in
 stdenv.mkDerivation rec {
   name = "genymotion-${version}";
-  version = "2.8.0";
+  version = "3.0.1";
   src = requireFile {
-    url = https://www.genymotion.com/download/;
+    url = https://dl.genymotion.com/releases/genymotion-3.0.1/genymotion-3.0.1-linux_x64.bin;
     name = "genymotion-${version}-linux_x64.bin";
-    sha256 = "0lvfdlpmmsyq2i9gs4mf6a8fxkfimdr4rhyihqnfhjij3fzxz4lk";
+    sha256 = "1k11syi1k2x8mf03gg946dlgz75p5m3282mrln6k7mmb5x9p4dh2";
   };
 
   buildInputs = [ makeWrapper which xdg_utils ];
@@ -47,7 +69,10 @@ stdenv.mkDerivation rec {
     patchExecutable() {
       patchInterpreter "$1"
       wrapProgram "$out/libexec/genymotion/$1" \
-        --set "LD_LIBRARY_PATH" "${libPath}"
+        --set "LD_LIBRARY_PATH" "${libPath}" \
+        --set "QT_XKB_CONFIG_ROOT" "${xkeyboard_config}/share/X11/xkb" \
+        --set "QT_PLUGIN_PATH" "$out/libexec/genymotion/plugins"
+        #--set "QT_PLUGIN_PATH" "${qtbase.bin}/${qtbase.qtPluginPrefix}:$out/libexec/genymotion/plugins"
     }
 
     patchTool() {
@@ -63,10 +88,44 @@ stdenv.mkDerivation rec {
     patchTool aapt
     patchTool glewinfo
 
-    rm $out/libexec/genymotion/libxkbcommon*
+    # Remove libraries that are installed by NixOS
+    #rm $out/libexec/genymotion/*.so
+    #rm $out/libexec/genymotion/*.so.*
+
+    #rm $out/libexec/genymotion/libc*
+    #rm $out/libexec/genymotion/libE*
+    #rm $out/libexec/genymotion/libG*
+    #rm $out/libexec/genymotion/libg*
+    #rm $out/libexec/genymotion/liba*
+    #rm $out/libexec/genymotion/libd*
+
+    #rm $out/libexec/genymotion/libO*
+    #rm $out/libexec/genymotion/libx*
+    #rm $out/libexec/genymotion/libX*
+    #rm $out/libexec/genymotion/libr*
+    #rm $out/libexec/genymotion/libsw*
+
+    #rm $out/libexec/genymotion/libl*
+    #rm $out/libexec/genymotion/libs*
+    #rm $out/libexec/genymotion/libx*
+    #rm $out/libexec/genymotion/libQt*
+    #rm $out/libexec/genymotion/libp*
+
+    #rm $out/libexec/genymotion/*Qt*.so*
+    #rm $out/libexec/genymotion/libssl*
+    #rm $out/libexec/genymotion/libcrypto*
+
+    #find $out/libexec/genymotion -type f -name '*libqt*' -delete
+    #find $out/libexec/genymotion -type f -name '*libQt*' -delete
+
+    #cat $out/libexec/genymotion/qt.conf 
+
+    #rm $out/libexec/genymotion/qt.conf
+    
+    #ln -s ${hiredis}/lib/libhiredis.so $out/libexec/genymotion/libhiredis.so.0.13
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "Fast and easy Android emulation";
     longDescription = ''
       Genymotion is a relatively fast Android emulator which comes with
@@ -74,8 +133,8 @@ stdenv.mkDerivation rec {
       suitable for application testing.
      '';
     homepage = https://www.genymotion.com/;
-    license = stdenv.lib.licenses.unfree;
+    license = licenses.unfree;
     platforms = ["x86_64-linux"];
-    maintainers = [ stdenv.lib.maintainers.puffnfresh ];
+    maintainers = with maintainers; [ puffnfresh lihop ];
   };
 }

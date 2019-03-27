@@ -730,7 +730,7 @@ in
 
   ezstream = callPackage ../tools/audio/ezstream { };
 
-  genymotion = callPackage ../development/mobile/genymotion { };
+  genymotion = qt59.callPackage ../development/mobile/genymotion { };
 
   gamecube-tools = callPackage ../development/tools/gamecube-tools { };
 
