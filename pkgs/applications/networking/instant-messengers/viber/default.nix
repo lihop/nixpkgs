@@ -1,15 +1,17 @@
 {fetchurl, stdenv, dpkg, makeWrapper,
  alsaLib, cups, curl, dbus, expat, fontconfig, freetype, glib, gst_all_1, harfbuzz, libcap,
- libpulseaudio, libxml2, libxslt, libGLU_combined, nspr, nss, openssl, systemd, wayland, xorg, zlib, ...
+ libpulseaudio, libxml2, libxslt, libGLU_combined, nspr, nss, openssl, systemd, wayland, xorg, zlib,
+ pciutils,
+ ...
 }:
 
 stdenv.mkDerivation rec {
   name = "viber-${version}";
-  version = "7.0.0.1035";
+  version = "10.3.0";
 
   src = fetchurl {
     url = "https://download.cdn.viber.com/cdn/desktop/Linux/viber.deb";
-    sha256 = "06mp2wvqx4y6rd5gs2mh442qcykjrrvwnkhlpx0lara331i2p0lj";
+    sha256 = "0z7ykrhj3iq4y319c614yh2whkwwfaj54c9rs51nc64czjddkmx5";
   };
 
   buildInputs = [ dpkg makeWrapper ];
@@ -36,6 +38,7 @@ stdenv.mkDerivation rec {
       nspr
       nss
       openssl
+      pciutils
       stdenv.cc.cc
       systemd
       wayland
@@ -78,8 +81,19 @@ stdenv.mkDerivation rec {
     wrapProgram $out/opt/viber/Viber \
       --set QT_PLUGIN_PATH "$out/opt/viber/plugins" \
       --set QT_XKB_CONFIG_ROOT "${xorg.xkeyboardconfig}/share/X11/xkb" \
-      --set QTCOMPOSE "${xorg.libX11.out}/share/X11/locale"
+      --set QTCOMPOSE "${xorg.libX11.out}/share/X11/locale" \
+      --set QTWEBENGINEPROCESS_PATH "$out/opt/viber/libexec/QtWebEngineProcess"
     ln -s $out/opt/viber/Viber $out/bin/viber
+
+    mkdir -p $out/opt/viber/libexec
+    cp -ar $out/opt/viber/translations/qtwebengine_locales $out/opt/viber/libexec
+    cp -ar $out/opt/viber/translations/qtwebengine_locales $out/opt/viber
+    cp -ar $out/opt/viber/resources/* $out/opt/viber/libexec
+    cp -ar $out/opt/viber/resources/* $out/opt/viber/
+
+    # Copy qml resources
+    cp -ar $out/opt/viber/qml/* $out/opt/viber/libexec
+    cp -ar $out/opt/viber/qml/* $out/opt/viber/
 
     mv $out/usr/share $out/share
     rm -rf $out/usr
