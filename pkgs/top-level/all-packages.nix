@@ -6247,6 +6247,8 @@ in
 
   retext = libsForQt5.callPackage ../applications/editors/retext { };
 
+  mcu8051ide = callPackage ../applications/editors/mcu-8051-ide { };
+
   richgo = callPackage ../development/tools/richgo {  };
 
   rs = callPackage ../tools/text/rs { };
@@ -14817,7 +14819,11 @@ in
   tk-8_6 = callPackage ../development/libraries/tk/8.6.nix { };
   tk-8_5 = callPackage ../development/libraries/tk/8.5.nix { tcl = tcl-8_5; };
 
+  tkimg = callPackage ../development/libraries/tkimg { };
+
   tl-expected = callPackage ../development/libraries/tl-expected { };
+
+  tdom = callPackage ../development/libraries/tdom { };
 
   tnt = callPackage ../development/libraries/tnt { };
 
