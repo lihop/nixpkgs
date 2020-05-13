@@ -19325,6 +19325,8 @@ in
 
   keepass-otpkeyprov = callPackage ../applications/misc/keepass-plugins/otpkeyprov { };
 
+  linux-notification-center = callPackage ../applications/misc/linux-notification-center { };
+
   exrdisplay = callPackage ../applications/graphics/exrdisplay { };
 
   exrtools = callPackage ../applications/graphics/exrtools { };
