@@ -2,15 +2,15 @@
 
 buildGoModule rec {
   pname = "helm";
-  version = "3.4.1";
+  version = "3.2.1";
 
   src = fetchFromGitHub {
     owner = "helm";
     repo = "helm";
     rev = "v${version}";
-    sha256 = "13w0s11319qg9mmmxc24mlj0hrp0r529p3ny4gfzsl0vn3qzd6i2";
+    sha256 = "1453qkd9s4z4r0xzmv8ym7qfg33szf6gizfkb5zxj590fcbsgnd7";
   };
-  vendorSha256 = "0x3dcvnrl7cs8faaiq9ybfgg0lkac5ppf61i724cja270nmpmazl";
+  vendorSha256 = "0j25m56cwzjd9b75v7xlb26q81bsmln77k23h9n8v2f2gqwwpkrl";
 
   doCheck = false;
 
@@ -28,6 +28,6 @@ buildGoModule rec {
     homepage = "https://github.com/kubernetes/helm";
     description = "A package manager for kubernetes";
     license = licenses.asl20;
-    maintainers = with maintainers; [ rlupton20 edude03 saschagrunert Frostman Chili-Man ];
+    maintainers = with maintainers; [ rlupton20 edude03 saschagrunert Frostman ];
   };
 }
