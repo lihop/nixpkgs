@@ -8539,6 +8539,8 @@ in
 
   trebleshot = libsForQt5.callPackage ../applications/networking/trebleshot { };
 
+  trenchbroom = libsForQt5.callPackage ../applications/misc/trenchbroom { };
+
   trickle = callPackage ../tools/networking/trickle {};
 
   inherit (nodePackages) triton;
