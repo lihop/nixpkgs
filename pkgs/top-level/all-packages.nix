@@ -7994,6 +7994,8 @@ with pkgs;
 
   godot-headless = callPackage ../development/tools/godot/3/headless.nix { };
 
+  godot-debug-server = callPackage ../development/tools/godot/3/debug-server.nix { };
+
   godot-server = callPackage ../development/tools/godot/3/server.nix { };
 
   goeland = callPackage ../applications/networking/feedreaders/goeland { };

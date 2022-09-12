@@ -1,108 +1,138 @@
-{ stdenv
-, lib
+{ stdenv, lib
+, alsa-lib
+, alsa-plugins
 , fetchFromGitHub
-, scons
-, pkg-config
-, udev
+, freetype
+, installShellFiles
+, libGLU
+, libpulseaudio
 , libX11
 , libXcursor
+, libXext
+, libXfixes
+, libXi
 , libXinerama
 , libXrandr
 , libXrender
-, libpulseaudio
-, libXi
-, libXext
-, libXfixes
-, freetype
-, openssl
-, alsa-lib
-, alsa-plugins
 , makeWrapper
-, libGLU
-, zlib
+, openssl
+, pkg-config
+, scons
+, udev
 , yasm
-, withUdev ? true
+, zlib
 }:
 
-let
-  options = {
-    touch = libXi != null;
-    pulseaudio = false;
-    udev = withUdev;
-  };
-in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (self: {
   pname = "godot";
   version = "3.5.1";
 
   src = fetchFromGitHub {
     owner = "godotengine";
     repo = "godot";
-    rev = "${version}-stable";
+    rev = "${self.version}-stable";
     sha256 = "sha256-uHwTthyhfeQN0R1XjqZ+kGRa5WcpeQzA/DO9hZk4lvU=";
   };
 
-  nativeBuildInputs = [ pkg-config makeWrapper ];
-  buildInputs = [
+  nativeBuildInputs = [
+    installShellFiles
+    pkg-config
+    makeWrapper
     scons
-    udev
+  ];
+
+  buildInputs = [
+    alsa-lib
+    freetype
+    libGLU
+    libpulseaudio
     libX11
     libXcursor
+    libXext
+    libXfixes
+    libXi
     libXinerama
     libXrandr
     libXrender
-    libXi
-    libXext
-    libXfixes
-    freetype
     openssl
-    alsa-lib
-    libpulseaudio
-    libGLU
-    zlib
+    udev
     yasm
+    zlib
   ];
 
-  patches = [ ./pkg_config_additions.patch ./dont_clobber_environment.patch ];
+  patches = [
+    ./detect.py.patch
+    ./dont_clobber_environment.patch
+  ];
 
   enableParallelBuilding = true;
 
-  sconsFlags = [ "target=release_debug" "platform=x11" ];
-  preConfigure = ''
-    sconsFlags+=" ${
-      lib.concatStringsSep " "
-      (lib.mapAttrsToList (k: v: "${k}=${builtins.toJSON v}") options)
-    }"
-  '';
+  buildDescription = "X11 tools";
+  buildPlatform = "x11";
+  shouldBuildTools = true;
+  buildTarget = "release_debug";
 
-  outputs = [ "out" "dev" "man" ];
+  shouldUseLinkTimeOptimization = self.buildTarget == "release";
+
+  sconsFlags = [
+    "platform=${self.buildPlatform}"
+    "tools=${lib.boolToString self.shouldBuildTools}"
+    "target=${self.buildTarget}"
+    "bits=${toString stdenv.hostPlatform.parsed.cpu.bits}"
+    "use_lto=${lib.boolToString self.shouldUseLinkTimeOptimization}"
+  ];
+
+  shouldWrapBinary = self.shouldBuildTools;
+  shouldInstallHeaders = self.shouldBuildTools;
+  shouldInstallShortcut = self.shouldBuildTools && self.buildPlatform != "server";
+
+  outputs = ["out" "man"] ++ lib.optional self.shouldBuildTools "dev";
+
+  builtGodotBinNamePattern = if self.buildPlatform == "server" then "godot_server.*" else "godot.*";
+
+  godotBinInstallPath = "bin";
+  installedGodotBinName = self.pname;
 
   installPhase = ''
-    mkdir -p "$out/bin"
-    cp bin/godot.* $out/bin/godot
+    runHook preInstall
 
-    wrapProgram "$out/bin/godot" \
-      --set ALSA_PLUGIN_DIR ${alsa-plugins}/lib/alsa-lib
+    echo "Installing godot binaries."
+    outbin="$out/$godotBinInstallPath"
+    mkdir -p "$outbin"
+    cp -R bin/. "$outbin"
+    mv "$outbin"/$builtGodotBinNamePattern "$outbin/$installedGodotBinName"
 
-    mkdir "$dev"
-    cp -r modules/gdnative/include $dev
+    if [ $shouldWrapBinary ]; then
+      wrapProgram "$outbin/$installedGodotBinName" \
+        --set ALSA_PLUGIN_DIR ${alsa-plugins}/lib/alsa-lib
+    fi
 
-    mkdir -p "$man/share/man/man6"
-    cp misc/dist/linux/godot.6 "$man/share/man/man6/"
+    echo "Installing godot manual."
+    installManPage misc/dist/linux/godot.6
 
-    mkdir -p "$out"/share/{applications,icons/hicolor/scalable/apps}
-    cp misc/dist/linux/org.godotengine.Godot.desktop "$out/share/applications/"
-    cp icon.svg "$out/share/icons/hicolor/scalable/apps/godot.svg"
-    cp icon.png "$out/share/icons/godot.png"
-    substituteInPlace "$out/share/applications/org.godotengine.Godot.desktop" \
-      --replace "Exec=godot" "Exec=$out/bin/godot"
+    if [ $shouldInstallHeaders ]; then
+      echo "Installing godot headers."
+      mkdir -p "$dev"
+      cp -R modules/gdnative/include "$dev"
+    fi
+
+    if [ $shouldInstallShortcut ]; then
+      echo "Installing godot shortcut."
+      mkdir -p "$out"/share/{applications,icons/hicolor/scalable/apps}
+      cp misc/dist/linux/org.godotengine.Godot.desktop "$out"/share/applications
+      cp icon.svg "$out"/share/icons/hicolor/scalable/apps/godot.svg
+      cp icon.png "$out"/share/icons/godot.png
+      substituteInPlace "$out"/share/applications/org.godotengine.Godot.desktop --replace "Exec=godot" "Exec=\"$outbin/$installedGodotBinName\""
+    fi
+
+    runHook postInstall
   '';
 
   meta = with lib; {
     homepage = "https://godotengine.org";
-    description = "Free and Open Source 2D and 3D game engine";
+    description = "Free and Open Source 2D and 3D game engine (" + self.buildDescription + ")";
     license = licenses.mit;
     platforms = [ "i686-linux" "x86_64-linux" "aarch64-linux" ];
-    maintainers = with maintainers; [ twey ];
+    maintainers = with maintainers; [ twey rotaerk ];
   };
-}
+})

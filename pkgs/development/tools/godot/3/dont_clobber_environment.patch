@@ -5,7 +5,7 @@ nixpkgs' cc-wrapper on the other hand relies on various NIX_* variables
 to be passed through like NIX_CFLAGS_COMPILE_BEFORE.
 --- a/SConstruct
 +++ b/SConstruct
-@@ -67,14 +67,7 @@ elif platform_arg == "javascript":
+@@ -67,14 +67,15 @@ elif platform_arg == "javascript":
  elif os.name == "nt" and methods.get_cmdline_bool("use_mingw", False):
      custom_tools = ["mingw"]
  
@@ -17,6 +17,14 @@ to be passed through like NIX_CFLAGS_COMPILE_BEFORE.
 -env_base.PrependENVPath("PKG_CONFIG_PATH", os.getenv("PKG_CONFIG_PATH"))
 -if "TERM" in os.environ:  # Used for colored output.
 -    env_base["ENV"]["TERM"] = os.environ["TERM"]
++# The original version of this would append the OS's PATH to the Scons PATH, but because
++# it is an append, the Scons PATH would take precedence.  The Scons PATH contains a bunch
++# of standard Linux paths like /usr/bin, so if they happen to contain versions of any
++# build-time dependencies of Godot, they will be used instead of the Nix version of them.
++#
++# This patch simply replaces the entire Scons environment (including the PATH) with that
++# of the OS. This isn't as surgical as just fixing the PATH, but it seems to work, and
++# seems to be the Nix community's current strategy when using Scons.
 +env_base = Environment(ENV = os.environ, tools=custom_tools)
  
  env_base.disabled_modules = []
