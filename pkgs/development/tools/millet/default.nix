@@ -1,30 +1,32 @@
-{ lib, rustPlatform, fetchFromGitHub, rustfmt }:
+{ lib, rustPlatform, fetchFromGitHub }:
 
 rustPlatform.buildRustPackage rec {
   pname = "millet";
-  version = "0.1.14";
+  version = "0.5.16";
 
   src = fetchFromGitHub {
     owner = "azdavis";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-Kz2CwfntAUI33igYJBJQKPAmoW895toe/wS9dGnFB64=";
+    hash = "sha256-YdCdB72f7IQsi8WKVmGlqAybcewisK1J7jfR5Irp6VE=";
   };
 
-  cargoSha256 = "sha256-Rrnt6VEp7jDGLSsDcHuPfKhkm4USstxi/OW5oOVrgqY=";
+  cargoHash = "sha256-2WEptDHo2t6p8nzd00fPu/XQqq0gUlLAyuSraMfbHL0=";
 
-  nativeBuildInputs = [
-    # Required for `syntax-gen` crate https://github.com/azdavis/language-util/blob/8ec2dc509c88951102ad3e751820443059a363af/crates/syntax-gen/src/util.rs#L37
-    rustfmt
-  ];
+  postPatch = ''
+    rm .cargo/config.toml
+  '';
 
   cargoBuildFlags = [ "--package" "lang-srv" ];
+
+  cargoTestFlags = [ "--package" "lang-srv" ];
 
   meta = with lib; {
     description = "A language server for Standard ML";
     homepage = "https://github.com/azdavis/millet";
     changelog = "https://github.com/azdavis/millet/raw/v${version}/docs/changelog.md";
-    license = licenses.mit;
+    license = [ licenses.mit /* or */ licenses.asl20 ];
     maintainers = with maintainers; [ marsam ];
+    mainProgram = "lang-srv";
   };
 }

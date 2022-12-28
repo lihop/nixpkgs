@@ -65,13 +65,13 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "aegisub";
-  version = "3.3.2-20220612";
+  version = "3.3.3";
 
   src = fetchFromGitHub {
     owner = "wangqr";
     repo = pname;
-    rev = "91f8b5f91eb960bad19899c10af08aca34f9b697";
-    sha256 = "sha256-lPkPWSsncsBKJHDnma9cUXsQJynruT9JpPkMTHdQ/e8=";
+    rev = "v${version}";
+    sha256 = "sha256-oKhLv81EFudrJaaJ2ga3pVh4W5Hd2YchpjsoYoqRm78=";
   };
 
   nativeBuildInputs = [
@@ -130,6 +130,12 @@ stdenv.mkDerivation rec {
     ./remove-bundled-luajit.patch
   ];
 
+  # error: unknown type name 'NSUInteger'
+  postPatch = ''
+    substituteInPlace src/dialog_colorpicker.cpp \
+      --replace "NSUInteger" "size_t"
+  '';
+
   NIX_CFLAGS_COMPILE = "-I${luajit52}/include";
   NIX_CFLAGS_LINK = "-L${luajit52}/lib";
 
@@ -153,7 +159,7 @@ stdenv.mkDerivation rec {
     # The Aegisub sources are itself BSD/ISC, but they are linked against GPL'd
     # softwares - so the resulting program will be GPL
     license = licenses.bsd3;
-    maintainers = [ maintainers.AndersonTorres ];
+    maintainers = with maintainers; [ AndersonTorres wegank ];
     platforms = platforms.unix;
   };
 }

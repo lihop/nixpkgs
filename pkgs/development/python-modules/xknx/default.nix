@@ -12,7 +12,7 @@
 
 buildPythonPackage rec {
   pname = "xknx";
-  version = "0.21.5";
+  version = "1.2.0";
   format = "setuptools";
 
   disabled = pythonOlder "3.8";
@@ -21,7 +21,7 @@ buildPythonPackage rec {
     owner = "XKNX";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "sha256-rtR77b4/cgDA6rf/Q+ecuKI5bl7N4YMim8TeQ7ovKhI=";
+    hash = "sha256-IHZvmVloBSLcK3GZV9urFeqRxOG76O9O/3ZDNTz4wjQ=";
   };
 
   propagatedBuildInputs = [
@@ -41,6 +41,8 @@ buildPythonPackage rec {
   disabledTests = [
     # Test requires network access
     "test_scan_timeout"
+    "test_start_secure_routing_knx_keys"
+    "test_start_secure_routing_manual"
   ];
 
   meta = with lib; {

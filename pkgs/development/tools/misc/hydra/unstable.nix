@@ -84,6 +84,7 @@ let
         DigestSHA1
         EmailMIME
         EmailSender
+        FileLibMagic
         FileSlurper
         FileWhich
         IOCompress
@@ -126,13 +127,13 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "hydra";
-  version = "2022-06-30";
+  version = "2022-10-22";
 
   src = fetchFromGitHub {
     owner = "NixOS";
     repo = "hydra";
-    rev = "f2f82b3eeed652e7fc076adf6dcd5a72baaaed18";
-    sha256 = "sha256-WPcwFX3q0Y0uMLVN853Xvn3e7RnOOHt8yTLbOBzz5oE=";
+    rev = "312cb42275e593eea5c44d8430ab09375fdb2fdb";
+    sha256 = "sha256-ablHzPwN2Pvju0kyo8N5Wavqkl60gKHCPLnruwqvwTg=";
   };
 
   patches = [

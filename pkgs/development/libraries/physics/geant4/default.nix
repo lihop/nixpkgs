@@ -10,7 +10,7 @@
 # Standard build environment with cmake.
 , lib, stdenv, fetchurl, fetchpatch, cmake
 
-, clhep ? null # not packaged currently
+, clhep
 , expat
 , xercesc
 , zlib
@@ -47,12 +47,12 @@ in
 lib.warnIf (enableQT != false) "geant4: enableQT is deprecated, please use enableQt"
 
 stdenv.mkDerivation rec {
-  version = "11.0.0";
+  version = "11.0.3";
   pname = "geant4";
 
   src = fetchurl{
     url = "https://cern.ch/geant4-data/releases/geant4-v${version}.tar.gz";
-    sha256 = "sha256-PMin350/8ceiGmLS6zoQvhX2uxWNOTI78yEzScnvdbk=";
+    hash = "sha256-cvi2h1EtbmMNxsZMXEG6cRIgRoVAEymZ0A5PzhkIrkg=";
   };
 
   cmakeFlags = [
@@ -65,7 +65,7 @@ stdenv.mkDerivation rec {
     "-DGEANT4_USE_INVENTOR=${if enableInventor then "ON" else "OFF"}"
     "-DGEANT4_USE_PYTHON=${if enablePython then "ON" else "OFF"}"
     "-DGEANT4_USE_RAYTRACER_X11=${if enableRaytracerX11 then "ON" else "OFF"}"
-    "-DGEANT4_USE_SYSTEM_CLHEP=${if clhep != null then "ON" else "OFF"}"
+    "-DGEANT4_USE_SYSTEM_CLHEP=ON"
     "-DGEANT4_USE_SYSTEM_EXPAT=ON"
     "-DGEANT4_USE_SYSTEM_ZLIB=ON"
     "-DGEANT4_BUILD_MULTITHREADED=${if enableMultiThreading then "ON" else "OFF"}"

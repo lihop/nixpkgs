@@ -4,35 +4,39 @@
 , fetchFromGitHub
 , installShellFiles
 , btrfs-progs
-, glibc
-, gitUpdater
+, testers
+, werf
 }:
 
 buildGoModule rec {
   pname = "werf";
-  version = "1.2.124";
+  version = "1.2.188";
 
   src = fetchFromGitHub {
     owner = "werf";
     repo = "werf";
     rev = "v${version}";
-    sha256 = "sha256-fdCFdsRMdH9xu2YIYt6r7BxqbdzrzUxLxB1k4WEnGIo=";
+    hash = "sha256-C8y86q+uf+8EZ9kBAZehld7PpGByJLjhYQOrc3YKH1A=";
   };
 
-  vendorSha256 = "sha256-AbTlchqVD3TySrcHcF3/QfMhbkNg4A4oef9Qkn2v6xY=";
+  vendorHash = "sha256-GjcmpHyjhjCWE5gQR/oTHfhHYg5WRu8uhgAuWhdxlYk=";
 
   proxyVendor = true;
 
   subPackages = [ "cmd/werf" ];
 
   nativeBuildInputs = [ installShellFiles ];
-  buildInputs = lib.optionals stdenv.isLinux [ btrfs-progs glibc.static ];
+
+  buildInputs = lib.optionals stdenv.isLinux [ btrfs-progs ]
+    ++ lib.optionals stdenv.hostPlatform.isGnu [ stdenv.cc.libc.static ];
+
+  CGO_ENABLED = if stdenv.isLinux then 1 else 0;
 
   ldflags = [
     "-s"
     "-w"
     "-X github.com/werf/werf/pkg/werf.Version=${src.rev}"
-  ] ++ lib.optionals stdenv.isLinux [
+  ] ++ lib.optionals (CGO_ENABLED == 1) [
     "-extldflags=-static"
     "-linkmode external"
   ];
@@ -40,8 +44,10 @@ buildGoModule rec {
   tags = [
     "containers_image_openpgp"
     "dfrunmount"
+    "dfrunnetwork"
+    "dfrunsecurity"
     "dfssh"
-  ] ++ lib.optionals stdenv.isLinux [
+  ] ++ lib.optionals (CGO_ENABLED == 1) [
     "exclude_graphdriver_devicemapper"
     "netgo"
     "no_devmapper"
@@ -49,8 +55,19 @@ buildGoModule rec {
     "static_build"
   ];
 
-  # There are no tests for cmd/werf.
-  doCheck = false;
+  preCheck = ''
+    # Test all targets.
+    unset subPackages
+
+    # Remove tests that require external services.
+    rm -rf \
+      integration/suites \
+      pkg/true_git/*test.go \
+      test/e2e
+  '' + lib.optionalString (CGO_ENABLED == 0) ''
+    # A workaround for osusergo.
+    export USER=nixbld
+  '';
 
   postInstall = ''
     installShellCompletion --cmd werf \
@@ -58,10 +75,10 @@ buildGoModule rec {
       --zsh <($out/bin/werf completion --shell=zsh)
   '';
 
-  passthru.updateScript = gitUpdater {
-    inherit pname version;
-    ignoredVersions = "1\.[3-9].*";
-    rev-prefix = "v";
+  passthru.tests.version = testers.testVersion {
+    package = werf;
+    command = "werf version";
+    version = src.rev;
   };
 
   meta = with lib; {

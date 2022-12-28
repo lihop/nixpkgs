@@ -25,14 +25,14 @@ with py.pkgs;
 
 buildPythonApplication rec {
   pname = "pip-audit";
-  version = "2.4.1";
+  version = "2.4.5";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "trailofbits";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-Uko8ZtVMu9a/WrgSREFY3c8O+psE6cWpyHKVrOTJOJE=";
+    hash = "sha256-S3v2utDLZOY7RXOnMQV8Zo7h6vMPyiwlws/EftXFpTM=";
   };
 
   nativeBuildInputs = [
@@ -46,6 +46,7 @@ buildPythonApplication rec {
     lockfile
     packaging
     pip-api
+    pip-requirements-parser
     progress
     resolvelib
     rich
@@ -67,7 +68,7 @@ buildPythonApplication rec {
   disabledTestPaths = [
     # Tests require network access
     "test/dependency_source/test_requirement.py"
-    "test/dependency_source/test_resolvelib.py"
+    "test/dependency_source/resolvelib/test_resolvelib.py"
     "test/service/test_pypi.py"
     "test/service/test_osv.py"
   ];

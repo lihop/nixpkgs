@@ -9,6 +9,8 @@
 , python3
 , qttools # for translations
 , wrapQtAppsHook
+, ffmpeg-jami
+, jami-daemon
 , libnotify
 , qt5compat
 , qtbase
@@ -19,7 +21,7 @@
 , qtsvg
 , qtwebengine
 , qtwebchannel
-, jami-libclient
+, withWebengine ? true
 }:
 
 stdenv.mkDerivation {
@@ -30,7 +32,7 @@ stdenv.mkDerivation {
 
   preConfigure = ''
     python gen-resources.py
-    echo 'const char VERSION_STRING[] = "${version}";' > src/version.h
+    echo 'const char VERSION_STRING[] = "${version}";' > src/app/version.h
   '';
 
   nativeBuildInputs = [
@@ -42,9 +44,10 @@ stdenv.mkDerivation {
   ];
 
   buildInputs = [
-    jami-libclient
-    networkmanager
+    ffmpeg-jami
+    jami-daemon
     libnotify
+    networkmanager
     qtbase
     qt5compat
     qrencode
@@ -53,7 +56,15 @@ stdenv.mkDerivation {
     qtmultimedia
     qtsvg
     qtwebchannel
+  ] ++ lib.optionals withWebengine [
     qtwebengine
+  ];
+
+  cmakeFlags = [
+    "-DRING_BUILD_DIR=${jami-daemon}/include"
+    "-DRING_XML_INTERFACES_DIR=${jami-daemon}/share/dbus-1/interfaces"
+  ] ++ lib.optionals (!withWebengine) [
+    "-DWITH_WEBENGINE=false"
   ];
 
   qtWrapperArgs = [

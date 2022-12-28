@@ -8,13 +8,13 @@
 
 stdenv.mkDerivation rec {
   pname = "polaris-web";
-  version = "build-50";
+  version = "build-55";
 
   src = fetchFromGitHub {
     owner = "agersant";
     repo = "polaris-web";
     rev = "${version}";
-    sha256 = "Xe+eAlWIDJR4CH1KCQaVlMAunpEikrmD96B5cqFWYYM=";
+    sha256 = "2XqU4sExF7Or7RxpOK2XU9APtBujfPhM/VkOLKVDvF4=";
   };
 
   nativeBuildInputs = [
@@ -50,6 +50,9 @@ stdenv.mkDerivation rec {
       runHook preBuild
 
       export PATH="${nodeDependencies}/bin:${nodejs}/bin:$PATH"
+
+      # https://github.com/parcel-bundler/parcel/issues/8005
+      export NODE_OPTIONS=--no-experimental-fetch
 
       ln -s ${nodeDependencies}/lib/node_modules .
       npm run production

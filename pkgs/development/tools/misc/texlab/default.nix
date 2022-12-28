@@ -2,6 +2,7 @@
 , stdenv
 , rustPlatform
 , fetchFromGitHub
+, help2man
 , installShellFiles
 , libiconv
 , Security
@@ -9,34 +10,40 @@
 , nix-update-script
 }:
 
+let
+  isCross = stdenv.hostPlatform != stdenv.buildPlatform;
+in
 rustPlatform.buildRustPackage rec {
   pname = "texlab";
-  version = "4.2.0";
+  version = "4.3.1";
 
   src = fetchFromGitHub {
     owner = "latex-lsp";
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-oYM+OAYjQ8aNAryg0Cthj14BsxMFnOtz38XdUQZZolk=";
+    repo = "texlab";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-gtPnuKmKfUBZDM6DATJB5NxndOwvG5JpBRO4cEU6lIU=";
   };
 
-  cargoSha256 = "sha256-TDGiqC9eNIJfLTc1R3nvE84rAsVE8jtTaeQbVNMeVgg=";
+  cargoSha256 = "sha256-nu2KltPgexBTxG13kUgHgMrxefPD+Gaj5qBIWWFPdFs=";
 
-  outputs = [ "out" "man" ];
+  outputs = [ "out" ] ++ lib.optional (!isCross) "man";
 
-  nativeBuildInputs = [ installShellFiles ];
+  nativeBuildInputs = [ installShellFiles ]
+    ++ lib.optional (!isCross) help2man;
 
-  buildInputs = lib.optionals stdenv.isDarwin [ libiconv Security CoreServices ];
+  buildInputs = lib.optionals stdenv.isDarwin [
+    libiconv
+    Security
+    CoreServices
+  ];
 
-  postInstall = ''
+  # When we cross compile we cannot run the output executable to
+  # generate the man page
+  postInstall = lib.optionalString (!isCross) ''
+    # TexLab builds man page separately in CI:
+    # https://github.com/latex-lsp/texlab/blob/v4.3.1/.github/workflows/publish.yml#L126-L130
+    help2man --no-info "$out/bin/texlab" > texlab.1
     installManPage texlab.1
-
-    # Remove generated dylib of human_name dependency. TexLab statically
-    # links to the generated rlib and doesn't reference the dylib. I
-    # couldn't find any way to prevent building this by passing cargo flags.
-    # See https://github.com/djudd/human-name/blob/master/Cargo.toml#L43
-    rm "$out/lib/libhuman_name${stdenv.hostPlatform.extensions.sharedLibrary}"
-    rmdir "$out/lib"
   '';
 
   passthru.updateScript = nix-update-script {

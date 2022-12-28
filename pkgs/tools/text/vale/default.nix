@@ -2,7 +2,7 @@
 
 buildGoModule rec {
   pname = "vale";
-  version = "2.20.0";
+  version = "2.21.0";
 
   subPackages = [ "cmd/vale" ];
   outputs = [ "out" "data" ];
@@ -11,7 +11,7 @@ buildGoModule rec {
     owner = "errata-ai";
     repo = "vale";
     rev = "v${version}";
-    sha256 = "sha256-3W6bSFf23eOUyzyqUczsajBDjYaCxlgB+vg0Bf5o/X0=";
+    sha256 = "sha256-H+Hi9KS8gDAfXNqotHdkzWK1m8twOajC8kf/uLUEAv4=";
   };
 
   vendorSha256 = "sha256-ODzQkNOXEvSOhG6MoJbyxIwduFAW5FQb5hlOn3+io3A=";
@@ -22,6 +22,9 @@ buildGoModule rec {
   '';
 
   ldflags = [ "-s" "-w" "-X main.version=${version}" ];
+
+  # Tests require network access
+  doCheck = false;
 
   meta = with lib; {
     homepage = "https://vale.sh/";

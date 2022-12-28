@@ -81,7 +81,11 @@ let
         sha256 = "0crkw3j1iwdc1pbf5dhar0b4q3h5gs2q1sika8m12y02yk3ns697";
       })
     ];
-    qtdeclarative = [ ./qtdeclarative.patch ];
+    qtdeclarative = [
+      ./qtdeclarative.patch
+      # prevent headaches from stale qmlcache data
+      ./qtdeclarative-default-disable-qmlcache.patch
+    ];
     qtlocation = [ ./qtlocation-gcc-9.patch ];
     qtscript = [ ./qtscript.patch ];
     qtserialport = [ ./qtserialport.patch ];
@@ -164,7 +168,7 @@ let
         inherit bison cups harfbuzz libGL;
         withGtk3 = !stdenv.isDarwin; inherit dconf gtk3;
         inherit debug developerBuild decryptSslTraffic;
-        inherit (darwin.apple_sdk.frameworks) AGL AppKit ApplicationServices Carbon Cocoa CoreAudio CoreBluetooth
+        inherit (darwin.apple_sdk.frameworks) AGL AppKit ApplicationServices AVFoundation Carbon Cocoa CoreAudio CoreBluetooth
           CoreLocation CoreServices DiskArbitration Foundation OpenGL MetalKit IOKit;
         inherit (darwin) libobjc;
       };

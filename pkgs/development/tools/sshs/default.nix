@@ -6,16 +6,16 @@
 
 buildGoModule rec {
   pname = "sshs";
-  version = "3.2.0";
+  version = "3.4.0";
 
   src = fetchFromGitHub {
     owner = "quantumsheep";
     repo = pname;
     rev = version;
-    sha256 = "D9doNVb2sTnzM8tF8cSJbIoaIYjGurkUHEyhcE3OqQg=";
+    sha256 = "KD971dGm1oQt9GbiUGZm2k4SJrBAA9rnHj7Gu0t3SJw=";
   };
 
-  vendorSha256 = "QWFz85bOrTnPGum5atccB5hKeATlZvDAt32by+DO/Fo=";
+  vendorSha256 = "OCh37wjSs40Q0VQmoc1nXQ4nWddnoUCrI5xgxpxR/Ec=";
 
   ldflags = [ "-s" "-w" "-X github.com/quantumsheep/sshs/cmd.Version=${version}" ];
 
@@ -27,6 +27,6 @@ buildGoModule rec {
     description = "Terminal user interface for SSH";
     homepage = "https://github.com/quantumsheep/sshs";
     license = licenses.mit;
-    maintainers = with maintainers; [ ihatethefrench ];
+    maintainers = with maintainers; [ not-my-segfault ];
   };
 }

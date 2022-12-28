@@ -2,6 +2,7 @@
 , attrs
 , buildPythonPackage
 , fetchPypi
+, hatch-fancy-pypi-readme
 , hatch-vcs
 , hatchling
 , importlib-metadata
@@ -14,14 +15,14 @@
 
 buildPythonPackage rec {
   pname = "jsonschema";
-  version = "4.6.1";
+  version = "4.16.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-7CgC5qN1F/CdR9m6EHlHWJrh0l/1V7kl2DoyH8KqXTs=";
+    sha256 = "sha256-FlBZ8Hbv9pcbrlt0L8App7TvP5vPBMFOR3anYF3hSyM=";
   };
 
   postPatch = ''
@@ -29,6 +30,7 @@ buildPythonPackage rec {
   '';
 
   nativeBuildInputs = [
+    hatch-fancy-pypi-readme
     hatch-vcs
     hatchling
   ];

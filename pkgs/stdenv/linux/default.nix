@@ -221,7 +221,7 @@ in
       # This is not an issue for the final stdenv, because this perl
       # won't be included in the final stdenv and won't be exported to
       # top-level pkgs as an override either.
-      perl = super.perl.override { enableThreading = false; };
+      perl = super.perl.override { enableThreading = false; enableCrypt = false; };
     };
   })
 
@@ -356,8 +356,9 @@ in
       #   stage5.gcc -> stage4.coreutils -> stage3.glibc -> bootstrap
       gmp = lib.makeOverridable (super.gmp.override { stdenv = self.stdenv; }).overrideAttrs (a: { pname = "${a.pname}-stage4"; });
 
-      # coreutils gets rebuilt both here and also in the final stage; we rename this one to avoid confusion
-      coreutils = super.coreutils.overrideAttrs (a: { pname = "${a.pname}-stage4"; });
+      # To allow users' overrides inhibit dependencies too heavy for
+      # bootstrap, like guile: https://github.com/NixOS/nixpkgs/issues/181188
+      gnumake = super.gnumake.override { inBootstrap = true; };
 
       gcc = lib.makeOverridable (import ../../build-support/cc-wrapper) {
         nativeTools = false;
@@ -400,7 +401,7 @@ in
       preHook = commonPreHook;
 
       initialPath =
-        ((import ../common-path.nix) {pkgs = prevStage;});
+        ((import ../generic/common-path.nix) {pkgs = prevStage;});
 
       extraNativeBuildInputs = [ prevStage.patchelf ] ++
         # Many tarballs come with obsolete config.sub/config.guess that don't recognize aarch64.
@@ -414,15 +415,11 @@ in
       inherit (prevStage.stdenv) fetchurlBoot;
 
       extraAttrs = {
-        # remove before 22.11
-        glibc = lib.warn
-          ( "`stdenv.glibc` is deprecated and will be removed in release 22.11."
-           + " Please use `pkgs.glibc` instead.")
-          prevStage.glibc;
-
         inherit bootstrapTools;
         shellPackage = prevStage.bash;
       };
+
+      disallowedRequisites = [ bootstrapTools.out ];
 
       # Mainly avoid reference to bootstrap tools
       allowedRequisites = with prevStage; with lib;
@@ -447,7 +444,7 @@ in
       overrides = self: super: {
         inherit (prevStage)
           gzip bzip2 xz bash coreutils diffutils findutils gawk
-          gnumake gnused gnutar gnugrep gnupatch patchelf
+          gnused gnutar gnugrep gnupatch patchelf
           attr acl zlib pcre libunistring;
         ${localSystem.libc} = getLibc prevStage;
 
@@ -458,6 +455,7 @@ in
           inherit (self) stdenv runCommandLocal patchelf libunistring;
         };
 
+        gnumake = super.gnumake.override { inBootstrap = false; };
       } // lib.optionalAttrs (super.stdenv.targetPlatform == localSystem) {
         # Need to get rid of these when cross-compiling.
         inherit (prevStage) binutils binutils-unwrapped;

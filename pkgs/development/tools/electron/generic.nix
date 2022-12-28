@@ -31,7 +31,7 @@ let
       ++ optionals (versionAtLeast version "11.0.0") [ "aarch64-darwin" ]
       ++ optionals (versionOlder version "19.0.0") [ "i686-linux" ];
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    knownVulnerabilities = optional (versionOlder version "15.0.0") "Electron version ${version} is EOL";
+    knownVulnerabilities = optional (versionOlder version "18.0.0") "Electron version ${version} is EOL";
   };
 
   fetcher = vers: tag: hash: fetchurl {
@@ -104,14 +104,17 @@ let
   };
 
   darwin = {
-    nativeBuildInputs = [ unzip ];
+    nativeBuildInputs = [
+      makeWrapper
+      unzip
+    ];
 
     buildCommand = ''
       mkdir -p $out/Applications
       unzip $src
       mv Electron.app $out/Applications
       mkdir -p $out/bin
-      ln -s $out/Applications/Electron.app/Contents/MacOS/Electron $out/bin/electron
+      makeWrapper $out/Applications/Electron.app/Contents/MacOS/Electron $out/bin/electron
     '';
   };
 in

@@ -4,16 +4,16 @@ let
   common = { stname, target, postInstall ? "" }:
     buildGoModule rec {
       pname = stname;
-      version = "1.20.3";
+      version = "1.22.1";
 
       src = fetchFromGitHub {
         owner = "syncthing";
         repo = "syncthing";
         rev = "v${version}";
-        hash = "sha256-8sxCTPFdf5VDysANUYqic6zq5gipTL6wmPXstJc+6bA=";
+        hash = "sha256-XndTMPO1lN6bsjeHbvrZ+i4VwaKoUOcWOfbVQ2E7/eo=";
       };
 
-      vendorSha256 = "sha256-CJFKY69Iz8GrVpvUdDveMQQFj6RXApfgYjP7B1wfgfo=";
+      vendorSha256 = "sha256-ZxA05K5zKmQIm2R525DNXpGXqwM33j3PCuPN5d2qcj8=";
 
       doCheck = false;
 
@@ -34,9 +34,8 @@ let
 
       inherit postInstall;
 
-      passthru.tests = with nixosTests; {
-        init = syncthing-init;
-        relay = syncthing-relay;
+      passthru.tests = {
+        inherit (nixosTests) syncthing syncthing-init syncthing-relay;
       };
 
       meta = with lib; {

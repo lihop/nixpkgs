@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , fetchurl
+, fetchpatch
 , gettext
 , gnome
 , libgtop
@@ -22,6 +23,7 @@
 
 stdenv.mkDerivation rec {
   pname = "gnome-console";
+  # Do not upgrade until https://gitlab.gnome.org/GNOME/vte/-/issues/2584 is resolved!
   version = "42.2";
 
   src = fetchurl {
@@ -29,10 +31,17 @@ stdenv.mkDerivation rec {
     sha256 = "fSbmwYdExXWnhykyY/YM7/YwEHCY6eWKd2WwCsdDcEk=";
   };
 
+  patches = [
+    (fetchpatch {
+      name = "fix-clang-build-issues.patch";
+      url = "https://gitlab.gnome.org/GNOME/console/-/commit/0e29a417d52e27da62f5cac461400be6a764dc65.patch";
+      sha256 = "sha256-5ORNZOxjC5dMk9VKaBcJu5OV1SEZo9SNUbN4Ob5hVJs=";
+    })
+  ];
+
   buildInputs = [
     gettext
     libgtop
-    gnome.nautilus
     gtk3
     libhandy
     pcre2
@@ -51,6 +60,10 @@ stdenv.mkDerivation rec {
     wrapGAppsHook
   ];
 
+  mesonFlags = [
+    "-Dnautilus=disabled"
+  ];
+
   passthru = {
     updateScript = gnome.updateScript {
       packageName = pname;
@@ -64,6 +77,6 @@ stdenv.mkDerivation rec {
     homepage = "https://gitlab.gnome.org/GNOME/console";
     license = licenses.gpl3Plus;
     maintainers = teams.gnome.members ++ (with maintainers; [ zhaofengli ]);
-    platforms = platforms.linux;
+    platforms = platforms.unix;
   };
 }

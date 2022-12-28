@@ -22,12 +22,11 @@ rec {
   };
 
   ppc64 = {
-    config = "powerpc64-unknown-linux-gnu";
-    gcc = { abi = "elfv2"; }; # for gcc configuration
+    config = "powerpc64-unknown-linux-gnuabielfv2";
   };
   ppc64-musl = {
     config = "powerpc64-unknown-linux-musl";
-    gcc = { abi = "elfv2"; }; # for gcc configuration
+    gcc = { abi = "elfv2"; };
   };
 
   sheevaplug = {
@@ -304,15 +303,18 @@ rec {
 
   # BSDs
 
+  x86_64-freebsd = {
+    config = "x86_64-unknown-freebsd13";
+    useLLVM = true;
+  };
+
   x86_64-netbsd = {
     config = "x86_64-unknown-netbsd";
-    libc = "nblibc";
   };
 
   # this is broken and never worked fully
   x86_64-netbsd-llvm = {
     config = "x86_64-unknown-netbsd";
-    libc = "nblibc";
     useLLVM = true;
   };
 

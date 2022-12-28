@@ -1,28 +1,25 @@
 { lib
 , stdenvNoCC
-, fetchFromGitHub
+, fetchurl
 }:
 
 stdenvNoCC.mkDerivation rec {
   pname = "cpm";
-  version = "0.35.1";
+  version = "0.36.0";
 
-  src = fetchFromGitHub {
-    owner = "cpm-cmake";
-    repo = "CPM.cmake";
-    rev = "v${version}";
-    hash = "sha256-Oon/5iwkUUASsUDvde69iEwLe8/CAzwYKYsyzH5K+V0=";
+  src = fetchurl {
+    url = "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${version}/CPM.cmake";
+    sha256 = "sha256-F5YA1Z8OdSihipjo7QhqIZMKBcvm9WyfJ5l4WZwW9Cc=";
   };
 
+  dontUnpack = true;
   dontConfigure = true;
-
   dontBuild = true;
 
   installPhase = ''
     runHook preInstall
 
-    mkdir -p ${placeholder "out"}/share/cpm/
-    cp ./cmake/CPM.cmake ${placeholder "out"}/share/cpm/
+    install -Dm644 $src $out/share/cpm/CPM.cmake
 
     runHook postInstall
   '';

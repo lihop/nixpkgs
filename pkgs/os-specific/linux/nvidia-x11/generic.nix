@@ -15,6 +15,7 @@
 , prePatch ? ""
 , patches ? []
 , broken ? false
+, brokenOpen ? broken
 }@args:
 
 { lib, stdenv, callPackage, pkgs, pkgsi686Linux, fetchurl
@@ -100,16 +101,21 @@ let
     nativeBuildInputs = [ perl nukeReferences ]
       ++ optionals (!libsOnly) kernel.moduleBuildDependencies;
 
-    disallowedReferences = optional (!libsOnly) [ kernel.dev ];
+    disallowedReferences = optionals (!libsOnly) [ kernel.dev ];
 
     passthru = {
-      open = mapNullable (hash: callPackage (import ./open.nix self hash) { }) openSha256;
+      open = mapNullable (hash: callPackage ./open.nix {
+        inherit hash;
+        nvidia_x11 = self;
+        broken = brokenOpen;
+      }) openSha256;
       settings = (if settings32Bit then pkgsi686Linux.callPackage else callPackage) (import ./settings.nix self settingsSha256) {
         withGtk2 = preferGtk2;
         withGtk3 = !preferGtk2;
       };
       persistenced = mapNullable (hash: callPackage (import ./persistenced.nix self hash) { }) persistencedSha256;
       inherit persistencedVersion settingsVersion;
+      compressFirmware = false;
     } // optionalAttrs (!i686bundled) {
       inherit lib32;
     };
@@ -121,7 +127,8 @@ let
       platforms = [ "x86_64-linux" ] ++ optionals (!i686bundled) [ "i686-linux" ];
       maintainers = with maintainers; [ jonringer ];
       priority = 4; # resolves collision with xorg-server's "lib/xorg/modules/extensions/libglx.so"
-      inherit broken;
+      # proprietary driver currently does not support X86_KERNEL_IBT, which is scheduled to be added in linux 6.2
+      broken = broken || (kernel != null && kernel.kernelAtLeast "6.2");
     };
   };
 

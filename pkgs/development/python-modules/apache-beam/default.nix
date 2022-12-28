@@ -27,17 +27,19 @@
 , pymongo
 , pytestCheckHook
 , python
-, pythonAtLeast
 , python-dateutil
+, pythonAtLeast
+, pythonRelaxDepsHook
 , pytz
 , pyyaml
 , requests
 , requests-mock
+, scikit-learn
 , setuptools
 , sqlalchemy
 , tenacity
+, testcontainers
 , typing-extensions
-, scikit-learn
 }:
 
 buildPythonPackage rec {
@@ -51,12 +53,16 @@ buildPythonPackage rec {
     sha256 = "sha256-0S7Dj6PMSbZkEAY6ZLUpKVfe/tFxsq60TTAFj0Qhtv0=";
   };
 
-  # See https://github.com/NixOS/nixpkgs/issues/156957.
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "dill>=0.3.1.1,<0.3.2" "dill" \
-      --replace "pyarrow>=0.15.1,<8.0.0" "pyarrow"
-  '';
+  pythonRelaxDeps = [
+    # See https://github.com/NixOS/nixpkgs/issues/156957
+    "dill"
+    "numpy"
+    "pyarrow"
+    "pymongo"
+
+    # See https://github.com/NixOS/nixpkgs/issues/193613
+    "protobuf"
+  ];
 
   sourceRoot = "source/sdks/python";
 
@@ -64,6 +70,7 @@ buildPythonPackage rec {
     cython
     grpcio-tools
     mypy-protobuf
+    pythonRelaxDepsHook
   ];
 
   propagatedBuildInputs = [
@@ -90,6 +97,8 @@ buildPythonPackage rec {
     typing-extensions
   ];
 
+  enableParallelBuilding = true;
+
   pythonImportsCheck = [
     "apache_beam"
   ];
@@ -107,6 +116,7 @@ buildPythonPackage rec {
     scikit-learn
     sqlalchemy
     tenacity
+    testcontainers
   ];
 
   # Make sure we're running the tests for the actually installed
@@ -122,8 +132,6 @@ buildPythonPackage rec {
     #         container_init: Callable[[], Union[PostgresContainer, MySqlContainer]],
     #     E   NameError: name 'MySqlContainer' is not defined
     #
-    # Test relies on the testcontainers package, which is not currently (as of
-    # 2022-04-08) available in nixpkgs.
     "apache_beam/io/external/xlang_jdbcio_it_test.py"
 
     # These tests depend on the availability of specific servers backends.

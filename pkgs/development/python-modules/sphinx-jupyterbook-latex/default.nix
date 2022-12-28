@@ -8,15 +8,21 @@
 
 buildPythonPackage rec {
   pname = "sphinx-jupyterbook-latex";
-  version = "0.4.6";
+  version = "0.5.1";
+  format = "pyproject";
 
   disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit version;
     pname = "sphinx_jupyterbook_latex";
-    sha256 = "8ff3775b11ab4798e6e8ec983601d7aea4c3b8e8b5d28ca758578ede3a791334";
+    sha256 = "sha256-QErSEpolSEkJaQLzfcF0oDlugEhN5Y9/KwVwC2IknLY=";
   };
+
+  postPatch = ''
+    substituteInPlace setup.cfg \
+      --replace "sphinx>=3,<5" "sphinx>=3"
+  '';
 
   propagatedBuildInputs = [ sphinx ]
     ++ lib.optionals (pythonOlder "3.9") [ importlib-resources ];

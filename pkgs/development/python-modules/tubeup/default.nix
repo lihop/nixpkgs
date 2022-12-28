@@ -9,19 +9,19 @@
 
 buildPythonPackage rec {
   pname = "tubeup";
-  version = "0.0.32";
+  version = "0.0.34";
+  format = "setuptools";
 
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-YWBp6qXz4hNTBzywBGTXDQSzbWfoEEvJLQL5wy8DQ1g=";
+    sha256 = "ae1e606b243fd70742f8b5871c497628d258ee9f416caa46544aca9a5fbfbca0";
   };
 
   postPatch = ''
     substituteInPlace setup.py \
-      --replace "docopt==0.6.2" "docopt" \
-      --replace "internetarchive==2.0.3" "internetarchive"
+      --replace "docopt==0.6.2" "docopt"
   '';
 
   propagatedBuildInputs = [ internetarchive docopt yt-dlp ];

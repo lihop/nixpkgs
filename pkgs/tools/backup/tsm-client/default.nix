@@ -5,6 +5,7 @@
 , fetchurl
 , autoPatchelfHook
 , rpmextract
+, libxcrypt
 , openssl
 , zlib
 , lvm2  # LVM image backup and restore functions (optional)
@@ -45,24 +46,24 @@
 # point to this derivations `/dsmi_dir` directory symlink.
 # Other environment variables might be necessary,
 # depending on local configuration or usage; see:
-# https://www.ibm.com/docs/en/spectrum-protect/8.1.13?topic=solaris-set-api-environment-variables
+# https://www.ibm.com/docs/en/spectrum-protect/8.1.15?topic=solaris-set-api-environment-variables
 
 
 # The newest version of TSM client should be discoverable by
 # going to the `downloadPage` (see `meta` below).
 # Find the "Backup-archive client" table on that page.
 # Look for "Download Documents" of the latest release.
-# Here, two links must be checked:
+# Here, two links must be checked if existing:
 # * "IBM Spectrum Protect Client ... Downloads and READMEs":
 #   In the table at the page's bottom,
 #   check the date of the "Linux x86_64 client"
 # * "IBM Spectrum Protect BA client ... interim fix downloads"
-# Look for the "Linux x86_64 client" rows
-# in the table # at the bottom of each page.
+# Look for the "Linux x86_64 client ..." rows
+# in the table at the bottom of each page.
 # Follow the "HTTPS" link of the row with the latest date stamp.
 # In the directory listing to show up, pick the big `.tar` file.
 #
-# (as of 2021-12-18)
+# (as of 2022-09-29)
 
 
 let
@@ -107,10 +108,10 @@ let
 
   unwrapped = stdenv.mkDerivation rec {
     name = "tsm-client-${version}-unwrapped";
-    version = "8.1.15.0";
+    version = "8.1.15.2";
     src = fetchurl {
       url = mkSrcUrl version;
-      hash = "sha512-K98irjGvN2QejwbOoRhnHkYdFX3ZQ8hv+v2Gb2/pnr9AE1uj6h0lEXQu2cOEHbk7jMtGwpglzofCF7yUyT/tcw==";
+      hash = "sha512-ljygVoW7zR+LVHf4LSoBn3qEHISobsxheLxs9NyKWQiwPWpfhSgJO+bX4QRzAmrpSTNrETxHkuXqzGSHaaBlzg==";
     };
     inherit meta passthru;
 
@@ -119,6 +120,7 @@ let
       rpmextract
     ];
     buildInputs = [
+      libxcrypt
       openssl
       stdenv.cc.cc
       zlib

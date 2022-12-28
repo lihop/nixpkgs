@@ -61,37 +61,43 @@ let
       (flip mapAttrs cfg.ldap-proxy.settings
         (const (mapAttrs (const renderValue)))));
 
+  privacyidea-token-janitor = pkgs.writeShellScriptBin "privacyidea-token-janitor" ''
+    exec -a privacyidea-token-janitor \
+      /run/wrappers/bin/sudo -u ${cfg.user} \
+      env PRIVACYIDEA_CONFIGFILE=${cfg.stateDir}/privacyidea.cfg \
+      ${penv}/bin/privacyidea-token-janitor $@
+  '';
 in
 
 {
   options = {
     services.privacyidea = {
-      enable = mkEnableOption "PrivacyIDEA";
+      enable = mkEnableOption (lib.mdDoc "PrivacyIDEA");
 
       environmentFile = mkOption {
         type = types.nullOr types.path;
         default = null;
         example = "/root/privacyidea.env";
-        description = ''
+        description = lib.mdDoc ''
           File to load as environment file. Environment variables
           from this file will be interpolated into the config file
-          using <package>envsubst</package> which is helpful for specifying
+          using `envsubst` which is helpful for specifying
           secrets:
-          <programlisting>
-          { <xref linkend="opt-services.privacyidea.secretKey" /> = "$SECRET"; }
-          </programlisting>
+          ```
+          { services.privacyidea.secretKey = "$SECRET"; }
+          ```
 
           The environment-file can now specify the actual secret key:
-          <programlisting>
+          ```
           SECRET=veryverytopsecret
-          </programlisting>
+          ```
         '';
       };
 
       stateDir = mkOption {
         type = types.str;
         default = "/var/lib/privacyidea";
-        description = ''
+        description = lib.mdDoc ''
           Directory where all PrivacyIDEA files will be placed by default.
         '';
       };
@@ -99,7 +105,7 @@ in
       superuserRealm = mkOption {
         type = types.listOf types.str;
         default = [ "super" "administrators" ];
-        description = ''
+        description = lib.mdDoc ''
           The realm where users are allowed to login as administrators.
         '';
       };
@@ -107,7 +113,7 @@ in
       secretKey = mkOption {
         type = types.str;
         example = "t0p s3cr3t";
-        description = ''
+        description = lib.mdDoc ''
           This is used to encrypt the auth_token.
         '';
       };
@@ -115,7 +121,7 @@ in
       pepper = mkOption {
         type = types.str;
         example = "Never know...";
-        description = ''
+        description = lib.mdDoc ''
           This is used to encrypt the admin passwords.
         '';
       };
@@ -124,7 +130,7 @@ in
         type = types.str;
         default = "${cfg.stateDir}/enckey";
         defaultText = literalExpression ''"''${config.${opt.stateDir}}/enckey"'';
-        description = ''
+        description = lib.mdDoc ''
           This is used to encrypt the token data and token passwords
         '';
       };
@@ -133,7 +139,7 @@ in
         type = types.str;
         default = "${cfg.stateDir}/private.pem";
         defaultText = literalExpression ''"''${config.${opt.stateDir}}/private.pem"'';
-        description = ''
+        description = lib.mdDoc ''
           Private Key for signing the audit log.
         '';
       };
@@ -142,26 +148,26 @@ in
         type = types.str;
         default = "${cfg.stateDir}/public.pem";
         defaultText = literalExpression ''"''${config.${opt.stateDir}}/public.pem"'';
-        description = ''
+        description = lib.mdDoc ''
           Public key for checking signatures of the audit log.
         '';
       };
 
       adminPasswordFile = mkOption {
         type = types.path;
-        description = "File containing password for the admin user";
+        description = lib.mdDoc "File containing password for the admin user";
       };
 
       adminEmail = mkOption {
         type = types.str;
         example = "admin@example.com";
-        description = "Mail address for the admin user";
+        description = lib.mdDoc "Mail address for the admin user";
       };
 
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = ''
+        description = lib.mdDoc ''
           Extra configuration options for pi.cfg.
         '';
       };
@@ -169,22 +175,58 @@ in
       user = mkOption {
         type = types.str;
         default = "privacyidea";
-        description = "User account under which PrivacyIDEA runs.";
+        description = lib.mdDoc "User account under which PrivacyIDEA runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "privacyidea";
-        description = "Group account under which PrivacyIDEA runs.";
+        description = lib.mdDoc "Group account under which PrivacyIDEA runs.";
+      };
+
+      tokenjanitor = {
+        enable = mkEnableOption (lib.mdDoc "automatic runs of the token janitor");
+        interval = mkOption {
+          default = "quarterly";
+          type = types.str;
+          description = lib.mdDoc ''
+            Interval in which the cleanup program is supposed to run.
+            See {manpage}`systemd.time(7)` for further information.
+          '';
+        };
+        action = mkOption {
+          type = types.enum [ "delete" "mark" "disable" "unassign" ];
+          description = lib.mdDoc ''
+            Which action to take for matching tokens.
+          '';
+        };
+        unassigned = mkOption {
+          default = false;
+          type = types.bool;
+          description = lib.mdDoc ''
+            Whether to search for **unassigned** tokens
+            and apply [](#opt-services.privacyidea.tokenjanitor.action)
+            onto them.
+          '';
+        };
+        orphaned = mkOption {
+          default = true;
+          type = types.bool;
+          description = lib.mdDoc ''
+            Whether to search for **orphaned** tokens
+            and apply [](#opt-services.privacyidea.tokenjanitor.action)
+            onto them.
+          '';
+        };
       };
 
       ldap-proxy = {
-        enable = mkEnableOption "PrivacyIDEA LDAP Proxy";
+        enable = mkEnableOption (lib.mdDoc "PrivacyIDEA LDAP Proxy");
 
         configFile = mkOption {
           type = types.nullOr types.path;
           default = null;
-          description = ''
+          description = lib.mdDoc ''
             Path to PrivacyIDEA LDAP Proxy configuration (proxy.ini).
           '';
         };
@@ -192,32 +234,32 @@ in
         user = mkOption {
           type = types.str;
           default = "pi-ldap-proxy";
-          description = "User account under which PrivacyIDEA LDAP proxy runs.";
+          description = lib.mdDoc "User account under which PrivacyIDEA LDAP proxy runs.";
         };
 
         group = mkOption {
           type = types.str;
           default = "pi-ldap-proxy";
-          description = "Group account under which PrivacyIDEA LDAP proxy runs.";
+          description = lib.mdDoc "Group account under which PrivacyIDEA LDAP proxy runs.";
         };
 
         settings = mkOption {
           type = with types; attrsOf (attrsOf (oneOf [ str bool int (listOf str) ]));
           default = {};
-          description = ''
-            Attribute-set containing the settings for <package>privacyidea-ldap-proxy</package>.
+          description = lib.mdDoc ''
+            Attribute-set containing the settings for `privacyidea-ldap-proxy`.
             It's possible to pass secrets using env-vars as substitutes and
-            use the option <xref linkend="opt-services.privacyidea.ldap-proxy.environmentFile" />
-            to inject them via <package>envsubst</package>.
+            use the option [](#opt-services.privacyidea.ldap-proxy.environmentFile)
+            to inject them via `envsubst`.
           '';
         };
 
         environmentFile = mkOption {
           default = null;
           type = types.nullOr types.str;
-          description = ''
+          description = lib.mdDoc ''
             Environment file containing secrets to be substituted into
-            <xref linkend="opt-services.privacyidea.ldap-proxy.settings" />.
+            [](#opt-services.privacyidea.ldap-proxy.settings).
           '';
         };
       };
@@ -228,9 +270,59 @@ in
 
     (mkIf cfg.enable {
 
-      environment.systemPackages = [ pkgs.privacyidea ];
+      assertions = [
+        {
+          assertion = cfg.tokenjanitor.enable -> (cfg.tokenjanitor.orphaned || cfg.tokenjanitor.unassigned);
+          message = ''
+            privacyidea-token-janitor has no effect if neither orphaned nor unassigned tokens
+            are to be searched.
+          '';
+        }
+      ];
+
+      environment.systemPackages = [ pkgs.privacyidea (hiPrio privacyidea-token-janitor) ];
 
       services.postgresql.enable = mkDefault true;
+
+      systemd.services.privacyidea-tokenjanitor = mkIf cfg.tokenjanitor.enable {
+        environment.PRIVACYIDEA_CONFIGFILE = "${cfg.stateDir}/privacyidea.cfg";
+        path = [ penv ];
+        serviceConfig = {
+          CapabilityBoundingSet = [ "" ];
+          ExecStart = "${pkgs.writeShellScript "pi-token-janitor" ''
+            ${optionalString cfg.tokenjanitor.orphaned ''
+              echo >&2 "Removing orphaned tokens..."
+              privacyidea-token-janitor find \
+                --orphaned true \
+                --action ${cfg.tokenjanitor.action}
+            ''}
+            ${optionalString cfg.tokenjanitor.unassigned ''
+              echo >&2 "Removing unassigned tokens..."
+              privacyidea-token-janitor find \
+                --assigned false \
+                --action ${cfg.tokenjanitor.action}
+            ''}
+          ''}";
+          Group = cfg.group;
+          LockPersonality = true;
+          MemoryDenyWriteExecute = true;
+          ProtectHome = true;
+          ProtectHostname = true;
+          ProtectKernelLogs = true;
+          ProtectKernelModules = true;
+          ProtectKernelTunables = true;
+          ProtectSystem = "strict";
+          ReadWritePaths = cfg.stateDir;
+          Type = "oneshot";
+          User = cfg.user;
+          WorkingDirectory = cfg.stateDir;
+        };
+      };
+      systemd.timers.privacyidea-tokenjanitor = mkIf cfg.tokenjanitor.enable {
+        wantedBy = [ "timers.target" ];
+        timerConfig.OnCalendar = cfg.tokenjanitor.interval;
+        timerConfig.Persistent = true;
+      };
 
       systemd.services.privacyidea = let
         piuwsgi = pkgs.writeText "uwsgi.json" (builtins.toJSON {
@@ -332,6 +424,7 @@ in
             [ cfg.ldap-proxy.environmentFile ];
           ExecStartPre =
             "${pkgs.writeShellScript "substitute-secrets-ldap-proxy" ''
+              umask 0077
               ${pkgs.envsubst}/bin/envsubst \
                 -i ${ldapProxyConfig} \
                 -o $STATE_DIRECTORY/ldap-proxy.ini

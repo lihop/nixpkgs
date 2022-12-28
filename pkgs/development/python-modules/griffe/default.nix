@@ -1,6 +1,6 @@
 { lib
 , aiofiles
-, buildPythonApplication
+, buildPythonPackage
 , cached-property
 , fetchFromGitHub
 , git
@@ -9,9 +9,9 @@
 , pythonOlder
 }:
 
-buildPythonApplication rec {
+buildPythonPackage rec {
   pname = "griffe";
-  version = "0.21.0";
+  version = "0.23.0";
   format = "pyproject";
 
   disabled = pythonOlder "3.7";
@@ -20,8 +20,15 @@ buildPythonApplication rec {
     owner = "mkdocstrings";
     repo = pname;
     rev = version;
-    hash = "sha256-yhhEcPwh1AjMtDlPZVDR69WX/728wuKqdJdc+yv/o4c=";
+    hash = "sha256-eoWOkAwAd3ab9+uUfAdrYhkheibfGYkuoNQX/3nS57w=";
   };
+
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace 'dynamic = ["version"]' 'version = "${version}"' \
+      --replace 'license = "ISC"' 'license = {file = "LICENSE"}' \
+      --replace 'version = {source = "scm"}' 'license-expression = "ISC"'
+  '';
 
   nativeBuildInputs = [
     pdm-pep517
@@ -41,11 +48,6 @@ buildPythonApplication rec {
       aiofiles
     ];
   };
-
-  postPatch = ''
-    substituteInPlace pyproject.toml \
-      --replace 'dynamic = ["version"]' 'version = "${version}"'
-  '';
 
   pythonImportsCheck = [
     "griffe"

@@ -2,6 +2,7 @@
 , buildPythonPackage
 , isPy3k
 , fetchFromGitHub
+, fetchpatch
 , python-dateutil
 , pytz
 , regex
@@ -13,12 +14,14 @@
 , parameterized
 , pytestCheckHook
 , GitPython
+, parsel
+, requests
 , ruamel-yaml
 }:
 
 buildPythonPackage rec {
   pname = "dateparser";
-  version = "1.1.1";
+  version = "1.1.3";
 
   disabled = !isPy3k;
 
@@ -26,22 +29,40 @@ buildPythonPackage rec {
     owner = "scrapinghub";
     repo = "dateparser";
     rev = "v${version}";
-    sha256 = "sha256-bDup3q93Zq+pvwsy/lQy2byOMjG6C/+7813hWQMbZRU=";
+    sha256 = "sha256-2bZaaaLT3hocIiqLZpudP6gmiYwxPNMrjG9dYF3GvTc=";
   };
 
-  propagatedBuildInputs = [
-    # install_requires
-    python-dateutil pytz regex tzlocal
-    # extra_requires
-    hijri-converter convertdate fasttext langdetect
+  patches = [
+    ./regex-compat.patch
   ];
+
+  postPatch = ''
+    substituteInPlace setup.py --replace \
+      'regex !=2019.02.19,!=2021.8.27,<2022.3.15' \
+      'regex'
+  '';
+
+  propagatedBuildInputs = [
+    python-dateutil
+    pytz
+    regex
+    tzlocal
+  ];
+
+  passthru.optional-dependencies = {
+    calendars = [ hijri-converter convertdate ];
+    fasttext = [ fasttext ];
+    langdetect = [ langdetect ];
+  };
 
   checkInputs = [
     parameterized
     pytestCheckHook
     GitPython
+    parsel
+    requests
     ruamel-yaml
-  ];
+  ] ++ lib.flatten (lib.attrValues passthru.optional-dependencies);
 
   preCheck = ''
     export HOME="$TEMPDIR"

@@ -18,8 +18,6 @@ import ./make-test-python.nix ({ pkgs, ...} : {
           enable = true;
           jobBuilder = {
             enable = true;
-            accessUser = "admin";
-            accessTokenFile = "/var/lib/jenkins/secrets/initialAdminPassword";
             nixJobs = [
               { job = {
                   name = "job-1";
@@ -81,7 +79,7 @@ import ./make-test-python.nix ({ pkgs, ...} : {
     in ''
     start_all()
 
-    master.wait_for_unit("jenkins")
+    master.wait_for_unit("default.target")
 
     assert "Authentication required" in master.succeed("curl http://localhost:8080")
 
@@ -96,8 +94,6 @@ import ./make-test-python.nix ({ pkgs, ...} : {
 
     with subtest("jobs are declarative"):
         # Check that jobs are created on disk.
-        master.wait_for_unit("jenkins-job-builder")
-        master.wait_until_fails("systemctl is-active jenkins-job-builder")
         master.wait_until_succeeds("test -f /var/lib/jenkins/jobs/job-1/config.xml")
         master.wait_until_succeeds("test -f /var/lib/jenkins/jobs/folder-1/config.xml")
         master.wait_until_succeeds("test -f /var/lib/jenkins/jobs/folder-1/jobs/job-2/config.xml")
@@ -115,8 +111,6 @@ import ./make-test-python.nix ({ pkgs, ...} : {
         )
 
         # Check that jobs are removed from disk.
-        master.wait_for_unit("jenkins-job-builder")
-        master.wait_until_fails("systemctl is-active jenkins-job-builder")
         master.wait_until_fails("test -f /var/lib/jenkins/jobs/job-1/config.xml")
         master.wait_until_fails("test -f /var/lib/jenkins/jobs/folder-1/config.xml")
         master.wait_until_fails("test -f /var/lib/jenkins/jobs/folder-1/jobs/job-2/config.xml")

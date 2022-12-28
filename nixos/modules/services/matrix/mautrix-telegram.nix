@@ -13,12 +13,16 @@ let
 in {
   options = {
     services.mautrix-telegram = {
-      enable = mkEnableOption "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge";
+      enable = mkEnableOption (lib.mdDoc "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge");
 
       settings = mkOption rec {
         apply = recursiveUpdate default;
         inherit (settingsFormat) type;
         default = {
+          homeserver = {
+            software = "standard";
+          };
+
           appservice = rec {
             database = "sqlite:///${dataDir}/mautrix-telegram.db";
             database_opts = {};
@@ -78,15 +82,12 @@ in {
             };
           }
         '';
-        description = ''
-          <filename>config.yaml</filename> configuration as a Nix attribute set.
+        description = lib.mdDoc ''
+          {file}`config.yaml` configuration as a Nix attribute set.
           Configuration options should match those described in
-          <link xlink:href="https://github.com/tulir/mautrix-telegram/blob/master/example-config.yaml">
-          example-config.yaml</link>.
-          </para>
+          [example-config.yaml](https://github.com/mautrix/telegram/blob/master/mautrix_telegram/example-config.yaml).
 
-          <para>
-          Secret tokens should be specified using <option>environmentFile</option>
+          Secret tokens should be specified using {option}`environmentFile`
           instead of this world-readable attribute set.
         '';
       };
@@ -94,14 +95,14 @@ in {
       environmentFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = ''
+        description = lib.mdDoc ''
           File containing environment variables to be passed to the mautrix-telegram service,
           in which secret tokens can be specified securely by defining values for
-          <literal>MAUTRIX_TELEGRAM_APPSERVICE_AS_TOKEN</literal>,
-          <literal>MAUTRIX_TELEGRAM_APPSERVICE_HS_TOKEN</literal>,
-          <literal>MAUTRIX_TELEGRAM_TELEGRAM_API_ID</literal>,
-          <literal>MAUTRIX_TELEGRAM_TELEGRAM_API_HASH</literal> and optionally
-          <literal>MAUTRIX_TELEGRAM_TELEGRAM_BOT_TOKEN</literal>.
+          `MAUTRIX_TELEGRAM_APPSERVICE_AS_TOKEN`,
+          `MAUTRIX_TELEGRAM_APPSERVICE_HS_TOKEN`,
+          `MAUTRIX_TELEGRAM_TELEGRAM_API_ID`,
+          `MAUTRIX_TELEGRAM_TELEGRAM_API_HASH` and optionally
+          `MAUTRIX_TELEGRAM_TELEGRAM_BOT_TOKEN`.
         '';
       };
 
@@ -111,7 +112,7 @@ in {
         defaultText = literalExpression ''
           optional config.services.matrix-synapse.enable "matrix-synapse.service"
         '';
-        description = ''
+        description = lib.mdDoc ''
           List of Systemd services to require and wait for when starting the application service.
         '';
       };
@@ -125,6 +126,19 @@ in {
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ] ++ cfg.serviceDependencies;
       after = [ "network-online.target" ] ++ cfg.serviceDependencies;
+      path = [ pkgs.lottieconverter ];
+
+      # mautrix-telegram tries to generate a dotfile in the home directory of
+      # the running user if using a postgresql databse:
+      #
+      #  File "python3.10/site-packages/asyncpg/connect_utils.py", line 257, in _dot_postgre>
+      #    return (pathlib.Path.home() / '.postgresql' / filename).resolve()
+      #  File "python3.10/pathlib.py", line 1000, in home
+      #    return cls("~").expanduser()
+      #  File "python3.10/pathlib.py", line 1440, in expanduser
+      #    raise RuntimeError("Could not determine home directory.")
+      # RuntimeError: Could not determine home directory.
+      environment.HOME = dataDir;
 
       preStart = ''
         # Not all secrets can be passed as environment variable (yet)
@@ -164,7 +178,7 @@ in {
         PrivateTmp = true;
         WorkingDirectory = pkgs.mautrix-telegram; # necessary for the database migration scripts to be found
         StateDirectory = baseNameOf dataDir;
-        UMask = 0027;
+        UMask = "0027";
         EnvironmentFile = cfg.environmentFile;
 
         ExecStart = ''

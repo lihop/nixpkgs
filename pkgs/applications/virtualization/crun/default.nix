@@ -11,7 +11,6 @@
 , yajl
 , nixosTests
 , criu
-, fetchpatch
 }:
 
 let
@@ -39,30 +38,19 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "crun";
-  version = "1.4.5";
+  version = "1.7";
 
   src = fetchFromGitHub {
     owner = "containers";
     repo = pname;
     rev = version;
-    sha256 = "sha256-YXbyGUY/E8odjljDok+yYyU8yZSyUFc22zumrUuuXXQ=";
+    sha256 = "sha256-Ly6GBR7nF7J5Dwe1jrQxR4XYsao7KxBAxGn8fsJwmMs=";
     fetchSubmodules = true;
   };
 
-  patches = [
-    # Should dropped in next release after 1.4.5
-    (fetchpatch {
-      name = "usrbin-paths.patch";
-      url = "https://github.com/containers/crun/commit/dd29f7f7f713c49784ac30f7cdca33b2ef94d5b8.patch";
-      sha256 = "sha256-kHHix8CUL+c8HbOe5qx4PeF1P19113U4bRZyleMUjqk=";
-    })
-  ];
-
   nativeBuildInputs = [ autoreconfHook go-md2man pkg-config python3 ];
 
-  buildInputs = [ libcap libseccomp systemd yajl ]
-    # Criu currently only builds on x86_64-linux
-    ++ lib.optional (lib.elem stdenv.hostPlatform.system criu.meta.platforms) criu;
+  buildInputs = [ criu libcap libseccomp systemd yajl ];
 
   enableParallelBuilding = true;
   strictDeps = true;
