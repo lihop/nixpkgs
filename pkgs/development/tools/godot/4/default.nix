@@ -42,13 +42,15 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "godot";
-  version = "4.0-beta12";
+  version = "4.0-rc1";
+
+  GODOT_VERSION_STATUS = "rc1";
 
   src = fetchFromGitHub {
     owner = "godotengine";
     repo = "godot";
-    rev = "3c9bf4bc210a8e6a208f30ca59de4d4d7e18c04d";
-    sha256 = "sha256-8eNEnMyCP2ohx7sVmdFDCANZSWkvy/1xy1kIE770CrQ=";
+    rev = "c4fb119f03477ad9a494ba6cdad211b35a8efcce";
+    sha256 = "sha256-YJrm3or4QSzs+MDc06gY6TvUtWRgLST8RkdsomY8lZk=";
   };
 
   nativeBuildInputs = [
@@ -86,7 +88,6 @@ stdenv.mkDerivation rec {
   patches = [
     # Godot expects to find xfixes inside xi, but nix's pkg-config only
     # gives the libs for the requested package (ignoring the propagated-build-inputs)
-    ./xfixes.patch
   ];
 
   enableParallelBuilding = true;

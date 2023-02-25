@@ -1,0 +1,26 @@
+diff --git a/platform/linuxbsd/x11/display_server_x11.cpp b/platform/linuxbsd/x11/display_server_x11.cpp
+index 10fd9972e3..124c2c15ff 100644
+--- a/platform/linuxbsd/x11/display_server_x11.cpp
++++ b/platform/linuxbsd/x11/display_server_x11.cpp
+@@ -830,6 +830,11 @@ int bad_window_error_handler(Display *display, XErrorEvent *error) {
+ 	return 0;
+ }
+ 
++int default_window_error_handler(Display *display, XErrorEvent *error) {
++	ERR_PRINT("Unhandled XServer error code: " + itos(error->error_code));
++	return 0;
++}
++
+ Rect2i DisplayServerX11::screen_get_usable_rect(int p_screen) const {
+ 	_THREAD_SAFE_METHOD_
+ 
+@@ -5289,6 +5294,9 @@ DisplayServerX11::DisplayServerX11(const String &p_rendering_driver, WindowMode
+ 	portal_desktop = memnew(FreeDesktopPortalDesktop);
+ #endif
+ 
++	// Prevent crashing by default.
++	XSetErrorHandler(&default_window_error_handler);
++
+ 	r_error = OK;
+ }
+ 
