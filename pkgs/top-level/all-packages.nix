@@ -7998,6 +7998,16 @@ with pkgs;
 
   godot-server = callPackage ../development/tools/godot/3/server.nix { };
 
+  godot-mono = callPackage ../development/tools/godot/3/mono {};
+
+  godot-mono-export-templates = callPackage ../development/tools/godot/3/mono/export-templates.nix { };
+
+  godot-mono-headless = callPackage ../development/tools/godot/3/mono/headless.nix { };
+
+  godot-mono-debug-server = callPackage ../development/tools/godot/3/mono/debug-server.nix { };
+
+  godot-mono-server = callPackage ../development/tools/godot/3/mono/server.nix { };
+
   goeland = callPackage ../applications/networking/feedreaders/goeland { };
 
   go-mtpfs = callPackage ../tools/filesystems/go-mtpfs { };
