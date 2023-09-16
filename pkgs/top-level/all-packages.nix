@@ -14714,7 +14714,7 @@ with pkgs;
 
   uhttpmock = callPackage ../development/libraries/uhttpmock { };
 
-  uim = callPackage ../tools/inputmethods/uim {
+  uim = libsForQt5.callPackage ../tools/inputmethods/uim {
     autoconf = buildPackages.autoconf269;
   };
 

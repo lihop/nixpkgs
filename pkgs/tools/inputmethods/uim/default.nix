@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, fetchpatch, shared-mime-info
+{ lib, mkDerivation, fetchFromGitHub, fetchpatch, shared-mime-info
 , autoconf, automake, intltool, libtool, pkg-config, cmake
 , ruby, librsvg
 , ncurses, m17n_lib, m17n_db, expat
@@ -27,7 +27,7 @@ assert withNetworking -> curl != null && openssl != null;
 assert withFFI -> libffi != null;
 assert withMisc -> libeb != null;
 
-stdenv.mkDerivation rec {
+mkDerivation rec {
   version = "1.8.8";
   pname = "uim";
 
@@ -52,7 +52,7 @@ stdenv.mkDerivation rec {
   ++ lib.optional withAnthy anthy
   ++ lib.optional withGtk2 gtk2
   ++ lib.optional withGtk3 gtk3
-  ++ lib.optionals withQt5 [ qt5.qtbase.bin qt5.qtbase.dev ]
+  ++ lib.optionals withQt5 [ qt5.qtbase.bin qt5.qtbase.dev qt5.qtx11extras ]
   ++ lib.optional withLibnotify libnotify
   ++ lib.optional withSqlite sqlite
   ++ lib.optionals withNetworking [
